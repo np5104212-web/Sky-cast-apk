@@ -77,7 +77,9 @@ import com.example.data.model.LocationInfo
 import com.example.ui.components.AnimatedWeatherArt
 import com.example.ui.components.DailyForecastPreviewCard
 import com.example.ui.components.HourlyForecastRow
+import com.example.ui.components.LiveCityClock
 import com.example.ui.components.UnitFormatters
+import com.example.ui.components.WeatherAlertNotificationComponent
 import com.example.ui.components.WeatherBackground
 import com.example.ui.components.WeatherMetricsGrid
 import com.example.ui.model.WeatherCategory
@@ -260,6 +262,22 @@ fun HomeScreen(
                                 .windowInsetsPadding(WindowInsets.navigationBars)
                                 .padding(bottom = 24.dp)
                         ) {
+                            // Weather Alert Notification Component
+                            if (weather.alerts.isNotEmpty()) {
+                                WeatherAlertNotificationComponent(
+                                    alerts = weather.alerts
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                            }
+
+                            // Live City Clock
+                            LiveCityClock(
+                                timezoneId = weather.timezone,
+                                cardBackground = conditionInfo.cardBackground
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
                             // Hero Temperature & Weather Art
                             WeatherHeroSection(
                                 weather = weather,

@@ -5,11 +5,13 @@ import android.content.Context
 import android.location.Location
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.data.model.AlertSeverity
 import com.example.data.model.AppThemeMode
 import com.example.data.model.IndiaLocationEntry
 import com.example.data.model.IndiaLocationsData
 import com.example.data.model.LocationInfo
 import com.example.data.model.TemperatureUnit
+import com.example.data.model.WeatherAlert
 import com.example.data.model.WeatherData
 import com.example.data.model.WindSpeedUnit
 import com.example.data.repository.PreferencesRepository
@@ -281,6 +283,27 @@ class WeatherViewModel(
                     isIndiaOverviewLoading = false
                 )
             }
+        }
+    }
+
+    fun toggleDemoWeatherAlert() {
+        _uiState.update { current ->
+            val data = current.weatherData ?: return@update current
+            val hasAlerts = data.alerts.isNotEmpty()
+            val updatedAlerts = if (hasAlerts) {
+                emptyList()
+            } else {
+                listOf(
+                    WeatherAlert(
+                        title = "Severe Weather Warning",
+                        description = "Severe weather warning in effect for ${current.currentLocation.displayName}. Dangerous meteorological conditions detected.",
+                        severity = AlertSeverity.WARNING,
+                        instruction = "Stay indoors and avoid high-risk low-lying areas. Monitor local weather bulletins.",
+                        source = "National Weather Advisory"
+                    )
+                )
+            }
+            current.copy(weatherData = data.copy(alerts = updatedAlerts))
         }
     }
 }

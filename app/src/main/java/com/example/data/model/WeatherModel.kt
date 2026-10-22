@@ -43,6 +43,21 @@ data class LocationInfo(
     }
 }
 
+enum class AlertSeverity {
+    WARNING,
+    WATCH,
+    ADVISORY,
+    INFO
+}
+
+data class WeatherAlert(
+    val title: String,
+    val description: String,
+    val severity: AlertSeverity,
+    val instruction: String? = null,
+    val source: String = "Meteorological Advisory"
+)
+
 data class CurrentWeather(
     val temperatureC: Double,
     val apparentTemperatureC: Double,
@@ -84,6 +99,7 @@ data class WeatherData(
     val hourly: List<HourlyForecastItem>,
     val daily: List<DailyForecastItem>,
     val timezone: String,
+    val alerts: List<WeatherAlert> = emptyList(),
     val fetchedAtEpochMs: Long = System.currentTimeMillis()
 )
 

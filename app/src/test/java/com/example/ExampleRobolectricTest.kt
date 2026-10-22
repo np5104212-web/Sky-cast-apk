@@ -87,4 +87,17 @@ class ExampleRobolectricTest {
         assertTrue(cityNames.contains("Chennai"))
         assertTrue(cityNames.contains("Jaipur"))
     }
+
+    @Test
+    fun `weather alert model properly supports severity levels`() {
+        val alert = com.example.data.model.WeatherAlert(
+            title = "Severe Thunderstorm Warning",
+            description = "Active lightning detected.",
+            severity = com.example.data.model.AlertSeverity.WARNING,
+            instruction = "Stay indoors"
+        )
+        assertEquals(com.example.data.model.AlertSeverity.WARNING, alert.severity)
+        assertEquals("Severe Thunderstorm Warning", alert.title)
+        assertEquals("Stay indoors", alert.instruction)
+    }
 }

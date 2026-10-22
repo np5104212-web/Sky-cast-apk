@@ -12,7 +12,27 @@ data class WeatherApiResponse(
     @Json(name = "elevation") val elevation: Double? = null,
     @Json(name = "current") val current: CurrentWeatherDto? = null,
     @Json(name = "hourly") val hourly: HourlyWeatherDto? = null,
-    @Json(name = "daily") val daily: DailyWeatherDto? = null
+    @Json(name = "daily") val daily: DailyWeatherDto? = null,
+    @Json(name = "weather_advisory") val weatherAdvisory: String? = null,
+    @Json(name = "advisory") val advisory: WeatherAdvisoryDto? = null,
+    @Json(name = "alerts") val alerts: List<WeatherAlertDto>? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class WeatherAdvisoryDto(
+    @Json(name = "headline") val headline: String? = null,
+    @Json(name = "severity") val severity: String? = null,
+    @Json(name = "description") val description: String? = null,
+    @Json(name = "instruction") val instruction: String? = null
+)
+
+@JsonClass(generateAdapter = true)
+data class WeatherAlertDto(
+    @Json(name = "event") val event: String? = null,
+    @Json(name = "headline") val headline: String? = null,
+    @Json(name = "severity") val severity: String? = null,
+    @Json(name = "description") val description: String? = null,
+    @Json(name = "instruction") val instruction: String? = null
 )
 
 @JsonClass(generateAdapter = true)

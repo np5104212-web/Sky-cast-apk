@@ -2,10 +2,12 @@ package com.example.data.repository
 
 import com.example.data.api.NetworkClient
 import com.example.data.api.OpenMeteoApiService
+import com.example.data.model.AlertSeverity
 import com.example.data.model.CurrentWeather
 import com.example.data.model.DailyForecastItem
 import com.example.data.model.HourlyForecastItem
 import com.example.data.model.LocationInfo
+import com.example.data.model.WeatherAlert
 import com.example.data.model.WeatherApiResponse
 import com.example.data.model.WeatherData
 import com.example.ui.model.WeatherConditionMapper
@@ -292,6 +294,137 @@ class WeatherRepository(
             }
         }
 
+        // Parse Severe Weather Alerts / Advisories from API
+        val alertList = mutableListOf<WeatherAlert>()
+
+        // 1. Check direct weather_advisory field from API
+        if (!response.weatherAdvisory.isNullOrBlank()) {
+            alertList.add(
+                WeatherAlert(
+                    title = "Weather Advisory",
+                    description = response.weatherAdvisory,
+                    severity = AlertSeverity.ADVISORY,
+                    source = "Official Weather Advisory"
+                )
+            )
+        }
+
+        // 2. Check structured advisory object from API
+        val adv = response.advisory
+        if (adv != null && (!adv.headline.isNullOrBlank() || !adv.description.isNullOrBlank())) {
+            val sev = when (adv.severity?.lowercase()) {
+                "warning", "severe", "extreme" -> AlertSeverity.WARNING
+                "watch" -> AlertSeverity.WATCH
+                "advisory" -> AlertSeverity.ADVISORY
+                else -> AlertSeverity.INFO
+            }
+            alertList.add(
+                WeatherAlert(
+                    title = adv.headline ?: "Severe Weather Advisory",
+                    description = adv.description ?: "",
+                    severity = sev,
+                    instruction = adv.instruction,
+                    source = "Meteorological Agency"
+                )
+            )
+        }
+
+        // 3. Check alerts list from API
+        response.alerts?.forEach { alertDto ->
+            val sev = when (alertDto.severity?.lowercase()) {
+                "warning", "severe", "extreme" -> AlertSeverity.WARNING
+                "watch" -> AlertSeverity.WATCH
+                "advisory" -> AlertSeverity.ADVISORY
+                else -> AlertSeverity.INFO
+            }
+            alertList.add(
+                WeatherAlert(
+                    title = alertDto.event ?: alertDto.headline ?: "Weather Warning",
+                    description = alertDto.description ?: "",
+                    severity = sev,
+                    instruction = alertDto.instruction,
+                    source = "Weather Alert Network"
+                )
+            )
+        }
+
+        // 4. Also evaluate severe weather codes and hazardous conditions
+        if (alertList.isEmpty()) {
+            when (weatherCode) {
+                95, 96, 99 -> alertList.add(
+                    WeatherAlert(
+                        title = "Severe Thunderstorm Warning",
+                        description = "Active convective thunderstorm with lightning, torrential rain, and possible hail.",
+                        severity = AlertSeverity.WARNING,
+                        instruction = "Seek secure indoor shelter immediately. Avoid tall trees and metal structures."
+                    )
+                )
+                82 -> alertList.add(
+                    WeatherAlert(
+                        title = "Violent Rain Squall Watch",
+                        description = "Intense rain squall with sudden drop in visibility and localized flooding risk.",
+                        severity = AlertSeverity.WATCH,
+                        instruction = "Postpone non-essential travel. Exercise extreme caution on wet roadways."
+                    )
+                )
+                65 -> alertList.add(
+                    WeatherAlert(
+                        title = "Heavy Rainfall Advisory",
+                        description = "Continuous heavy rainfall in progress across the area.",
+                        severity = AlertSeverity.ADVISORY,
+                        instruction = "Watch for localized waterlogging and carry rain protection."
+                    )
+                )
+                66, 67, 75, 86 -> alertList.add(
+                    WeatherAlert(
+                        title = "Winter Storm & Freezing Rain Warning",
+                        description = "Hazardous freezing precipitation and heavy snow creating slick surfaces.",
+                        severity = AlertSeverity.WARNING,
+                        instruction = "Avoid driving if possible. Keep cold-weather emergency supplies ready."
+                    )
+                )
+                45, 48 -> alertList.add(
+                    WeatherAlert(
+                        title = "Dense Fog Advisory",
+                        description = "Surface visibility is significantly reduced due to dense fog.",
+                        severity = AlertSeverity.ADVISORY,
+                        instruction = "Drive slowly with low-beam headlights and maintain safe following distances."
+                    )
+                )
+            }
+
+            if (windSpeed >= 50.0) {
+                alertList.add(
+                    WeatherAlert(
+                        title = "High Wind Advisory",
+                        description = "Damaging wind gusts of ${windSpeed.toInt()} km/h recorded in the area.",
+                        severity = AlertSeverity.ADVISORY,
+                        instruction = "Secure loose outdoor items and stay alert for fallen branches."
+                    )
+                )
+            }
+
+            if (currentTemp >= 40.0) {
+                alertList.add(
+                    WeatherAlert(
+                        title = "Extreme Heatwave Warning",
+                        description = "Dangerous daytime temperature reaching ${currentTemp.toInt()}°C.",
+                        severity = AlertSeverity.WARNING,
+                        instruction = "Stay well hydrated, remain in air-conditioned spaces, and avoid strenuous outdoor activity."
+                    )
+                )
+            } else if (currentTemp <= 2.0 && currentTemp > -30.0) {
+                alertList.add(
+                    WeatherAlert(
+                        title = "Cold Wave & Frost Advisory",
+                        description = "Near-freezing temperatures of ${currentTemp.toInt()}°C.",
+                        severity = AlertSeverity.ADVISORY,
+                        instruction = "Wear warm insulating layers and protect vulnerable pets and plants."
+                    )
+                )
+            }
+        }
+
         return WeatherData(
             location = location.copy(timezone = timezoneId),
             current = CurrentWeather(
@@ -309,7 +442,8 @@ class WeatherRepository(
             ),
             hourly = hourlyItems,
             daily = dailyItems,
-            timezone = timezoneId
+            timezone = timezoneId,
+            alerts = alertList
         )
     }
 }

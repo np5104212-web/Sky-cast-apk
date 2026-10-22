@@ -30,6 +30,7 @@ import androidx.compose.material.icons.rounded.Air
 import androidx.compose.material.icons.rounded.DarkMode
 import androidx.compose.material.icons.rounded.DeleteSweep
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.NotificationsActive
 import androidx.compose.material.icons.rounded.PinDrop
 import androidx.compose.material.icons.rounded.Thermostat
 import androidx.compose.material3.AlertDialog
@@ -273,6 +274,30 @@ fun SettingsScreen(
                                 .testTag("reset_default_city_button")
                         ) {
                             Text("Reset to Indore, MP (Default)")
+                        }
+                    }
+                }
+
+                // Weather Alerts & Notification Controls
+                item {
+                    SettingsCard(
+                        icon = Icons.Rounded.NotificationsActive,
+                        title = "Weather Advisories & Alerts",
+                        subtitle = "Severe condition notifications & warnings"
+                    ) {
+                        val hasActiveAlert = uiState.weatherData?.alerts?.isNotEmpty() == true
+                        Button(
+                            onClick = { viewModel.toggleDemoWeatherAlert() },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (hasActiveAlert) Color(0x33FF5252) else Color(0x332196F3),
+                                contentColor = if (hasActiveAlert) Color(0xFFFF8A80) else Color(0xFF64B5F6)
+                            ),
+                            shape = RoundedCornerShape(14.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("toggle_weather_alert_button")
+                        ) {
+                            Text(if (hasActiveAlert) "Dismiss Active Advisory Alert" else "Trigger Test Severe Weather Alert")
                         }
                     }
                 }
