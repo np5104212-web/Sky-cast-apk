@@ -1,0 +1,6 @@
+{
+  "name": "SkyCast",
+  "description": "SkyCast - Weather forecast app founded by Naitik. Real-time weather forecasts, hourly and 7-day outlooks, and city search across India and worldwide.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
